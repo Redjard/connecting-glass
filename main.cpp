@@ -1020,8 +1020,8 @@ $hook(void, Chunk, generateMeshSection, fdm::Chunk::ChunkMesh& mesh, uint8_t sta
 
 $hook(void, StateTitleScreen, init, StateManager& s)
 {
-    ResourceManager::loadArrayTexture("../../" + getModPath(modID) + "/tiles.png", cols, rows);
-    ResourceManager::textures->at("tiles.png")->ID = ResourceManager::textures->at("../../" + getModPath(modID) + "/tiles.png")->ID;
+    ResourceManager::loadArrayTexture( fdm::stl::string("../../") + getModPath(modID) + "/tiles.png", cols, rows);
+    ResourceManager::textures->at("tiles.png")->ID = ResourceManager::textures->at( fdm::stl::string("../../") + getModPath(modID) + "/tiles.png")->ID;
 
     original(self, s);
 }
