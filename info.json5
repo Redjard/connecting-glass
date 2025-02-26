@@ -1,16 +1,13 @@
 {
-  id: "tr1ngledev.better-glass",
-  name: "Better Glass",
-  author: "Tr1NgleDev",
-  description: "Better Glass.\n \
-  Yes i did rewrite the entire chunk mesh generation code for that to work.\n \
-  And no, it is NOT in 4D. I did simple 2D tiling for each side except for W ones because idfk how that would work.\n \
-  You can turn off glass tiling in Settings, which will leave you with just the optimized generation for transparent blocks:tm:.\n \
-  The tiles.png that the mod uses is inside the mod's directory. And YES it does replace the normal tiles.png (only in memory) \
-  \n\n\n(wtf resource pack manager v0.0.0.0.1??????)",
-  version: "1.0",
+  id: "redjard.connecting-glass",
+  name: "Connecting Glass",
+  author: "Redjard",
+  description: "Connect the textures of adjacent glass blocks.
+    In effect there will only be a border around an entire cluster of glass.
+    Improved fork of Tr1Ngle's Better Glass.",
+  version: "1.1",
   gameVersion: "0.2.1.4",
-  modDLL: "4DMod.dll",
+  modDLL: "Connecting Glass.dll",
   externalDLLs: [
   ],
   dependencies: {
