@@ -4,13 +4,6 @@ using fdm::Chunk;
 using fdm::BlockInfo;
 using fdm::Tex2D;
 
-template <typename type>
-inline constexpr void swap(type& a, type& b) {
-    type temp = a;
-    a = b;
-    b = temp;
-}
-
 inline constexpr BlockInfo::TYPE getBlock( const decltype(Chunk::blocks)& blocks, const glm::u8vec4& block ){
     return static_cast<BlockInfo::TYPE>( blocks[block.x][block.z][block.w][block.y] );
 }
@@ -113,13 +106,13 @@ $hook(void, Chunk, generateMeshSection, Chunk::ChunkMesh& mesh, uint8_t startY, 
                     there is no order in this. This has flipped chirality, the directions aren't in order either, wtf?
                 */
                 if (offset.x)  // whyyyy mash whyyyyyy
-                    swap(Δy,Δz);
+                    std::swap(Δy,Δz);
                 
                 planarNeighbours[i/3/3][(i/3)%3][i%3] = neighbours[1+Δx][1+Δy][1+Δz][1+Δw];  // map to hwy
                 i++;
                 
                 if (offset.x)  // whyyyy mash whyyyyyy
-                    swap(Δy,Δz);
+                    std::swap(Δy,Δz);
             }
             
             meshGlassBlockSide( mesh, max(glassBlock,neighbour), planarNeighbours, offset, lighting );
@@ -200,8 +193,8 @@ void makeCell(glm::ivec3 alignment, Chunk::ChunkMesh& mesh, glm::i8vec4 offset, 
     for (int swapFrom = 0; swapFrom < symDim; swapFrom++) { // find new homes for the symmetry-axes of the texture
         while (alignment[++swapTo] != 0);  // find a swapTo that is 0, that will accept the symmetry-axis
         for (glm::u8vec4& tuvec : tuv_side)
-            swap(tuvec[swapFrom],tuvec[swapTo]);
-        swap(alignRot[swapFrom],alignRot[swapTo]);
+            std::swap(tuvec[swapFrom],tuvec[swapTo]);
+        std::swap(alignRot[swapFrom],alignRot[swapTo]);
     }
     
     for (glm::u8vec4& tuvec : tuv_side)
