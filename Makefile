@@ -13,7 +13,7 @@ INCLUDE=-I 4dm.h/ -I 4dm.h/networking/include/
 
 # ./4dm.h/networking/lib/*;./4dm.h/soil/SOIL.lib;opengl32.lib;glew32.lib;glfw3.lib
 NETLIBS=$(shell find 4dm.h/networking/lib/*.lib -not -name steamwebrtc.lib -not -name webrtc-lite.lib)
-CLIBS=-L. $(patsubst %.lib,-l %,$(NETLIBS)) -L. -l opengl32   -Wl,-Bdynamic  -l glew32 -l glfw3  -Wl,-Bstatic
+CLIBS=-L. $(patsubst %.lib,-l %,$(NETLIBS)) -L. -l opengl32 -L 4dm.h/soil -l soil2   -Wl,-Bdynamic  -l glew32 -l glfw3  -Wl,-Bstatic
 # CLIBS=-L. $(patsubst %.lib,-l %,$(wildcard 4dm.h/networking/lib/*.lib)) -L 4dm.h/soil -l SOIL -L. -l opengl32   -Wl,-Bdynamic  -l glew32 -l glfw3  -Wl,-Bstatic
 
 
