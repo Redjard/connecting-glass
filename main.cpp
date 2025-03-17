@@ -3,6 +3,15 @@
 using fdm::Chunk;
 using fdm::BlockInfo;
 using fdm::Tex2D;
+#include <set>
+
+// a < b  for u8vec4
+auto u8vec4hash = [](const glm::u8vec4& a, const glm::u8vec4& b){
+    if (a.x != b.x) return a.x < b.x;
+    if (a.y != b.y) return a.y < b.y;
+    if (a.z != b.z) return a.z < b.z;
+                    return a.w < b.w;
+};
 
 inline constexpr BlockInfo::TYPE getBlock( const decltype(Chunk::blocks)& blocks, const glm::u8vec4& block ){
     return static_cast<BlockInfo::TYPE>( blocks[block.x][block.z][block.w][block.y] );
@@ -19,11 +28,15 @@ inline const std::unordered_map<glm::u8vec4,glm::u8vec4*> cube_verts = {
     {{ 0, 0, 0,+1}, BlockInfo::cube_verts_w},
 };
 
+// $exec {
+//     fdm::startConsole();
+//     FILE* fp;
+//     freopen_s(&fp, "CONOUT$", "w", stdout);
+// }
 void meshGlassBlockSide( Chunk::ChunkMesh&, glm::u8vec4, bool planarNeighbours[3][3][3], glm::i8vec4, BlockInfo::VertLighting* );
 $hook(void, Chunk, generateMeshSection, Chunk::ChunkMesh& mesh, uint8_t startY, bool smoothLighting, bool shadows, bool lights) {
     
-    
-    std::vector<glm::u8vec4> glassBlocks;
+    std::set<glm::u8vec4,decltype(u8vec4hash)> glassBlocks;
     
     // hide glass
     for (int blockX = 1; blockX <= 8; blockX++)
@@ -35,11 +48,46 @@ $hook(void, Chunk, generateMeshSection, Chunk::ChunkMesh& mesh, uint8_t startY, 
             continue;
         
         self->blocks[blockX][blockZ][blockW][blockY] = BlockInfo::AIR;
-        glassBlocks.push_back({ blockX, blockY, blockZ, blockW });
+        glassBlocks.insert({ blockX, blockY, blockZ, blockW });
     }
     
     // generate mesh without glass
     original(self, mesh, startY, smoothLighting, shadows, lights);
+    
+    // remove lava under glass
+    // mesh.indices has 20 indicies (5 tets of 4 verts) for every cell
+    // mesh.verts has the corresponding 8 vertex data objects for every cell
+    const unsigned char lavaTextID = BlockInfo::Blocks[BlockInfo::LAVA].tuv_top[0][3];
+    uint32_t Δindex = 0;
+    for (size_t i = 0; i < mesh.verts.size(); i+=8) {
+        
+        if (Δindex)
+            for (size_t j = 0; j < 20; j++)
+                mesh.indices[i/8*20+j] -= Δindex;
+        
+        glm::u8vec4 lowest = {10,10,10,10};
+        for (size_t j = 0; j < 8; j++) {
+            if (mesh.verts[i+j].tuv[3] != lavaTextID)
+                goto cont_lavaCells;
+            if (mesh.verts[i+j].vert.y != 1)
+                goto cont_lavaCells;
+            if (u8vec4hash(mesh.verts[i+j].vert, lowest))
+                lowest = mesh.verts[i+j].vert;
+        }
+        // this is a relevant lava cell, all verticies are at y=1 (horizontal cell) and have lava texture
+        
+        if ( !glassBlocks.contains(lowest+glm::u8vec4({1,-1,1,1}) ) )  // correction cause glass positions are with the 1-block margin, and we are the top face
+            continue;
+        // this is where a glass is so remove the lava texture
+        
+        mesh.verts.erase(mesh.verts.begin() + i, mesh.verts.begin() + i + 8);
+        mesh.indices.erase(mesh.indices.begin() + i/8*20, mesh.indices.begin() + i/8*20 + 20);
+        
+        i -= 8;
+        Δindex += 8;
+        
+        cont_lavaCells:;
+    }
     
     // restore glass
     for ( auto glassBlock : glassBlocks )
@@ -156,11 +204,6 @@ void meshGlassBlockSide( Chunk::ChunkMesh& mesh, glm::u8vec4 _side_origin, bool 
 
 static int dimglass[3];
 
-// $exec {
-//     fdm::startConsole();
-//     FILE* fp;
-//     freopen_s(&fp, "CONOUT$", "w", stdout);
-// }
 void makeCell(glm::ivec3 alignment, Chunk::ChunkMesh& mesh, glm::i8vec4 offset, glm::u8vec4 _side_origin, BlockInfo::VertLighting* _lighting) {
     
     const int dim = sizeof(alignment)/sizeof(alignment[0]);  // 3
